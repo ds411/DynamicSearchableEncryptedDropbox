@@ -34,7 +34,6 @@ public class TreeLevel extends HashMap<String, Value> {
             Base64.Encoder enc = Base64.getEncoder();
 
             Mac hmac = Mac.getInstance("HmacSHA256");
-            System.out.println(token);
             SecretKeySpec keySpec = new SecretKeySpec(dec.decode(token), "HmacSHA256");
             hmac.init(keySpec);
             byte[] hkeyBytes, c1Bytes, valuec1Bytes;

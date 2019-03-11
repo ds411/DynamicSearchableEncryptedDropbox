@@ -59,35 +59,6 @@
             </div>
         </div>
     </div>
-    <!--p>
-        <input id="password" type="password" placeholder="Password" oninput="setPassword(event)">
-    </p>
-    <div>
-        <form id="upload">
-            <p>
-                <input id="fileInput" type="file">
-            </p>
-            <p>
-                <button onclick="readWords(event)">Upload</button>
-            </p>
-        </form>
-    </div>
-    <div>
-        <form id="search">
-            <p>
-                <input id="query" type="text" placeholder="Search Query">
-            </p>
-            <p>
-                <button onclick="doSearch(event)">Search</button>
-            </p>
-        </form>
-    </div>
-    <div>
-        <ul id="results">
-
-        </ul>
-    </div-->
-
 
     <script>
         //Generates a new key
@@ -156,41 +127,14 @@
                 var id = file.name;
                 var fileWords = id.substring(0, id.lastIndexOf('.'));
                 fileWords.trim().split(/[^\w-']+/).forEach(function(element) {
-                    wordSet[element] = true;
+                    wordSet[element.toLowerCase()] = true;
                 });
 
                 textReader.onload = function() {
                     var text = textReader.result;
                     text.trim().split(/[^\w-']+/).forEach(function(element) {
-                        wordSet[element] = true;
+                        wordSet[element.toLowerCase()] = true;
                     });
-                    console.log(text);
-/*
-                    var plaintext = sjcl.codec.utf8String.toBits(text);
-                    var ciphertext = sjcl.mode.gcm.encrypt(prf, plaintext, iv);
-                    ciphertext = base64encode(ciphertext);
-                    var id = file.name;
-                    id = sjcl.codec.utf8String.toBits(id);
-                    id = sjcl.hash.sha256.hash(id);
-                    console.log(sjcl.codec.bytes.fromBits(id));
-                    id = sjcl.codec.base32.fromBits(id);
-                    console.log(id);
-                    if (file.type === 'text/plain') {
-                        text = text.trim();
-                        text.split(/[\s]+/).forEach(function (element) {
-                            wordSet[element] = true;
-                        });
-                    }
-                    else {
-                        text = file.name;
-                        text = text.substring(0, text.lastIndexOf('.'));
-                        text = text.split(/[\s]+/).forEach(function (element) {
-                            wordSet[element] = true;
-                        });
-                        console.log(wordSet);
-                    }
-                    uploadFile(ciphertext, id, file.type);
-                    update(Object.keys(wordSet), id, 0);*/
                 };
 
                 base64Reader.onload = function() {
@@ -199,16 +143,15 @@
                     var plaintext = sjcl.codec.utf8String.toBits(JSON.stringify(data));
                     var ciphertext = sjcl.mode.gcm.encrypt(prf, plaintext, iv);
                     ciphertext = base64encode(ciphertext);
-
                     var id = sjcl.codec.base32.fromBits(sjcl.hash.sha256.hash(sjcl.codec.utf8String.toBits(file.name)));
 
                     uploadFile(ciphertext, id);
                     update(Object.keys(wordSet), id, 0);
+                    document.getElementById('upload').reset();
                 };
 
                 if(file.type === 'text/plain') textReader.readAsText(file);
                 base64Reader.readAsDataURL(file);
-                console.log(wordSet);
             }
         };
 
@@ -252,13 +195,12 @@
             var req = new XMLHttpRequest();
             req.open("POST", "/api/upload");
             req.send(formdata);
-            document.getElementById('upload').reset();
         };
 
         //Performs search on form input
         var doSearch = function(event) {
             event.preventDefault();
-            var query = document.getElementById("query").value;
+            var query = document.getElementById("query").value.toLowerCase();
             search(query);
         };
 
@@ -278,19 +220,14 @@
 
             req.onreadystatechange = function(e) {
                 if(req.readyState === 4 && req.status === 200) {
-                    console.log(req.response);
                     JSON.parse(req.response).forEach(function(id) {
                         downloadLink(id);
-                        //a.addEventListener('onclick', function(){downloadFile(filename);return false;});// = "downloadFile(" + filename + ");return false;";
-                        //li.appendChild(a);
-                        //results.appendChild(li);
                     });
                 }
             };
 
             req.open("POST", "/api/search", false);
             req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-            console.log(tokens);
             req.send(JSON.stringify(tokens));
         };
 
@@ -335,10 +272,8 @@
 
             req.onreadystatechange = function(e) {
                 if(req.readyState === 4 && req.status === 200) {
-                    console.log(req.response);
                     var T = JSON.parse(req.response);
                     for(var key in Object.keys(T)) {
-                        console.log(decrypt(T[key]['c2']));
                         tuple = decrypt(T[key]['c2']);
                         update([tuple[0]], tuple[1], tuple[2]);
                     }
@@ -352,7 +287,6 @@
 
         var rebuild = function(w, id, op) {
             var T = fetchTable();
-            console.log(T);
             var l = fetchLevel();
             var lev = simpleRebuild(fetchTable(), fetchLevel(), w, id, op);
 
@@ -365,7 +299,6 @@
 
             req.open("POST", "/api/rebuild", false);
             req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-            console.log(lev);
             req.send(JSON.stringify(lev));
         };
 
@@ -403,12 +336,10 @@
         var simpleRebuild = function(T, l, w, id, op) {
             var B = [];
             B[0] = [w, id, op, 0];
-            console.log(T);
             for(var key in Object.keys(T)) {
                B.push(decrypt(T[key]['c2']));
             }
             B.sort(lexSort);
-            console.log(B);
             B = reCnt(B);
             keys[l] = newKey();
             var lev = [];

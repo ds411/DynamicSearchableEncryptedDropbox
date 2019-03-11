@@ -71,7 +71,6 @@ public class Tree {
             rows.addAll(levels.get(i).values());
         }
         Value[] arr = new Value[rows.size()];
-        System.out.println(Arrays.toString(rows.toArray()));
         return rows.toArray(arr);
     }
 

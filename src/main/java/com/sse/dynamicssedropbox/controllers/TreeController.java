@@ -44,8 +44,6 @@ public class TreeController {
     //Inserts a value into the tree
     @PostMapping(value = "/update")
     public boolean update(@RequestBody String[] values) {
-        //if(!tree.update(values)) return tree.levelsToRebuild();
-        //return null;
         String username = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
         trees.getAndPut(username).update(values);
         return true;
@@ -79,7 +77,6 @@ public class TreeController {
             File dir = new File(dirName);
             if(!dir.exists()) dir.mkdir();
             String filename = file.getOriginalFilename();
-            System.out.println(filename);
             try {
                 file.transferTo(new File(dir + "/" + filename));
                 return true;
@@ -127,7 +124,6 @@ public class TreeController {
     public Value[] reset() {
         String username = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
         Value[] values = trees.getAndPut(username).levelsToRegenerate();
-        System.out.println(Arrays.toString(values));
         trees.put(username, new Tree());
         return values;
     }
